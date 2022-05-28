@@ -12,8 +12,6 @@ MKDIR				:=	@mkdir -p
 DEBUG_MODE			:=	1
 
 SYS_ENDIAN			:=	1
-NO_SUDO				:=	1		# 1 if sudo is not needed to run the program, 0 otherwise
-CAP_FLAGS			:=	cap_net_raw=+ep
 
 CFLAGS				:=	-Wall -Werror -Wextra -g3 -ggdb -fdiagnostics-color=always
 LDFLAGS				:=	-lm
@@ -27,7 +25,6 @@ BASENAME			:=	main.c							\
 						options/parse_args.c			\
 						options/print_flags.c			\
 						utils/string.c					\
-						utils/random.c					\
 						core/setup.c					\
 						core/ft_cksum.c					\
 						core/trace.c					\
@@ -64,10 +61,6 @@ endif
 
 ifeq ($(SYS_ENDIAN), 1)
 	CFLAGS			+=	-DSYS_ENDIAN
-endif
-
-ifeq ($(NO_SUDO), 1)
-	CFLAGS			+=	-DNO_SUDO
 endif
 
 define show_git_infos =
@@ -168,14 +161,11 @@ $(PATH_OBJS)/%.o:	$(PATH_SRCS)/%.c
 					fi
 
 all:				$(NAME)
-ifeq ($(NO_SUDO),0)
-					@make -s cap
-endif
 					$(tear_down)
 
 -include $(DEPS)
 
-$(NAME):			check_sudo $(OBJS)
+$(NAME):			$(OBJS)
 					$(init_makefile)
 					@tput cnorm
 					@$(clear_progress)
@@ -183,9 +173,6 @@ $(NAME):			check_sudo $(OBJS)
 					@$(CC) $(OBJS) -o $@ $(LDFLAGS)
 					@$(clear_progress)
 					@$(clear_line)
-
-cap:
-					@[ -f $(NAME) ] && sudo setcap $(CAP_FLAGS) $(NAME)
 
 clean:
 					$(RM) -r $(PATH_OBJS)
@@ -196,18 +183,4 @@ fclean:				clean
 
 re:					fclean all
 
-check_sudo:
-					$(eval TMP := $(shell sudo -nv 2>&1))
-					$(eval START := $(firstword $(TMP:,= )))
-
-					@if [ $(NO_SUDO) -eq 0 ]; then \
-						if [ "$(START)" = "Sorry" ]; then \
-							/bin/echo -e "$(COLOR_ERROR)Sudo is needed to run this makefile$(CLEAR_COLOR)\n"; \
-							exit 1; \
-						fi; \
-					fi
-
-no_sudo:
-					@make -s NO_SUDO=0
-
-.PHONY:				all clean fclean re cap check_sudo no_sudo
+.PHONY:				all clean fclean re

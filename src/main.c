@@ -2,7 +2,6 @@
 #include "ft_getopt.h"
 #include "utils.h"
 #include "ft_traceroute.h"
-#include "random.h"
 
 void print_help(t_args *args)
 {
@@ -42,7 +41,6 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	init_pcg_state();
 	trace(arg_opt);
 	free_args(arg_opt);
 

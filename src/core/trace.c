@@ -1,49 +1,31 @@
 #include "ft_traceroute.h"
-#include "random.h"
 
 #include <stdio.h>
 #include <sys/select.h>
 
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
-int get_prot_id(t_protocols prot)
+static void send_probe(__unused t_packet *packet)
 {
-	switch (prot)
-	{
-	case UDP:
-		return 0;
-	case ICMP:
-		return 1;
-	case TCP:
-		return 2;
-	}
+	struct sockaddr addr;
+	size_t size = g_data->dst_size;
 
-	return -1;
-}
+	ft_memcpy(&addr, g_data->dst_addr, size);
 
-static void send_udp_probe(t_packet *packet)
-{
-	if (setsockopt(g_data->sock, IPPROTO_IP, IP_TTL, &packet->ttl, sizeof(uint16_t)) == -1)
-		warn("setsockopt failed");
-
-	int err = RECVERR;
-	if (setsockopt(g_data->sock, SOL_IP, IP_RECVERR, &err, sizeof(err)) == -1)
-		warn("setsockopt failed");
-
-	if (sendto(g_data->sock, packet->payload, PAYLOAD_SIZE, 0,
-			   g_data->infos->ai_addr, g_data->infos->ai_addrlen) == -1)
+	if (sendto(g_data->sock_send, PAYLOAD, PAYLOAD_SIZE, 0, &addr, size) == -1)
 		warn("sendto failed");
-	g_data->rtt[0] = ft_get_time();
+	g_data->rtt = ft_get_time();
 }
 
 static void recv_probe()
 {
+	t_packet packet;
 	struct timeval tv;
-	t_recv_packet packet;
+	char ip[INET_ADDRSTRLEN];
 	struct sockaddr_in addr;
 	socklen_t addrlen = sizeof(addr);
-	char ip[INET_ADDRSTRLEN];
 
 	tv.tv_sec = TIMEOUT_SEC;
 	tv.tv_usec = TIMEOUT_USEC;
@@ -62,44 +44,36 @@ static void recv_probe()
 			warn("recvfrom failed");
 		else
 		{
-			struct in_addr a = {.s_addr = packet.ip.saddr};
-			ft_strcpy(ip, inet_ntoa(a));
+			ft_strcpy(ip, inet_ntoa(addr.sin_addr));
 			if (ft_strcmp(ip, g_data->ip))
 			{
 				ft_memcpy(g_data->ip, ip, INET_ADDRSTRLEN);
-				dprintf(1, " %s", ip);
+				dprintf(1, "  %s", ip);
 			}
-			dprintf(1, "  %.3f ms", ft_get_diff(g_data->rtt[0]));
+			dprintf(1, "  %.3f ms", ft_get_diff(g_data->rtt));
 
-			a = ((struct sockaddr_in *)g_data->infos->ai_addr)->sin_addr;
-			if (!ft_strcmp(ip, inet_ntoa(a)))
+			if (!ft_strcmp(ip, g_data->dst))
 				g_data->done = 1;
 		}
 	}
 	else
-		dprintf(1, " *");
+		dprintf(1, "  *");
 }
 
 void __trace()
 {
-	int prot = get_prot_id(g_data->prot);
-	void (*send_probe[3])(t_packet *);
-	send_probe[0] = &send_udp_probe;
-	// send_probe[1] = &send_tcp_probe;
-	// send_probe[2] = &send_icmp_probe;
-
-	for (int i = FIRST_TTL; i < g_data->max_hops && !g_data->done; i++)
+	for (int ttl = FIRST_TTL; ttl < g_data->max_hops && !g_data->done; ttl++)
 	{
-		dprintf(1, "%2d ", i);
+		dprintf(1, "%2d", ttl);
 		ft_memset(g_data->ip, 0, INET_ADDRSTRLEN);
+
+		if (setsockopt(g_data->sock_send, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1)
+			throw_error("setsockopt failed"); // Critical error, should never happen
 
 		for (int j = 0; j < g_data->pbh; j++)
 		{
-			t_packet *packet = create_packet(i);
-			send_probe[prot](packet);
+			send_probe(NULL);
 			recv_probe();
-			free(packet);
-			(*g_data->port)++;
 		}
 		dprintf(1, "\n");
 	}

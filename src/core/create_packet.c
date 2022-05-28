@@ -1,48 +1,32 @@
 #include "ft_traceroute.h"
-#include "random.h"
+#include <unistd.h>
 
-static void fill_icmp_hdr(t_packet *packet)
+static void ft_set_icmp_hdr(struct icmp *icmp)
 {
-	struct icmphdr *icmp_hdr = &packet->icmp;
+	static uint16_t seq = 1;
 
-	icmp_hdr->type = ICMP_ECHO;
-	icmp_hdr->code = 0;
-	icmp_hdr->checksum = 0;
-	icmp_hdr->un.echo.id = ft_htons(pcg64_range(0, 65535));
-	icmp_hdr->un.echo.sequence = ft_htons(pcg64_range(0, 65535));
+	icmp->icmp_type = ICMP_ECHO;
+	icmp->icmp_code = 0;
+	icmp->icmp_id = getpid();
+	icmp->icmp_seq = seq++;
+	icmp->icmp_cksum = 0;
 
-	icmp_hdr->checksum = ft_cksum((uint16_t *)icmp_hdr, sizeof(struct icmphdr));
-}
-
-static void fill_tcp_hdr(__unused t_packet *packet)
-{
-}
-
-static void fill_probe(char *probe)
-{
-	int i = 0;
-
-	while (i < PAYLOAD_SIZE)
-		probe[i++] = pcg64_range(32, 127);
+	icmp->icmp_cksum = ft_cksum((uint16_t *)icmp, sizeof(struct icmp));
 }
 
 t_packet *create_packet(int ttl)
 {
-	t_packet *packet = malloc(sizeof(t_packet) + PAYLOAD_SIZE); // Needed by flexible payload
-	void (*fill_hdr[3])(t_packet *);
-	fill_hdr[0] = NULL;
-	fill_hdr[1] = &fill_icmp_hdr;
-	fill_hdr[2] = &fill_tcp_hdr;
+	t_packet *packet = malloc(sizeof(t_packet));
 
 	if (!packet)
 		return NULL;
-	ft_memset(packet, 0, sizeof(t_packet) + PAYLOAD_SIZE);
-	packet->ttl = ttl;
+	ft_memset(packet, 0, sizeof(t_packet));
+	ft_set_icmp_hdr(&packet->icmp);
 
-	int id = get_prot_id(g_data->prot);
-	if (id)
-		fill_hdr[id](packet);
-	fill_probe(packet->payload);
+	if (setsockopt(g_data->sock_send, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1)
+		throw_error("setsockopt failed"); // Critical error, should not happen
+	packet->icmp.icmp_cksum = ft_cksum((uint16_t *)&packet->icmp, sizeof(struct icmphdr));
 
+	ft_memcpy(packet->payload, PAYLOAD, PAYLOAD_SIZE);
 	return packet;
 }

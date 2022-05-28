@@ -14,15 +14,7 @@
 #include <sys/time.h>
 
 #include "ft_getopt.h"
-
-typedef struct s_packet t_packet;
-
-typedef enum e_protocols
-{
-	ICMP = IPPROTO_ICMP,
-	TCP = IPPROTO_TCP,
-	UDP = IPPROTO_UDP
-} t_protocols;
+#include "defines.h"
 
 typedef struct s_data
 {
@@ -30,49 +22,25 @@ typedef struct s_data
 	struct addrinfo *infos;
 	uint8_t done;
 
-	int32_t sock;
+	char dst[INET_ADDRSTRLEN];
+	struct sockaddr *dst_addr;
+	size_t dst_size;
 
-#ifndef NO_SUDO
+	int32_t sock_send;
 	int32_t sock_recv;
-#endif
 
-	size_t size; // size of the payload
 	uint8_t max_hops;
-	ssize_t pbh;  // probes per hop
-	uint16_t pst; // Probes at the Same Time
-	uint16_t *port;
+	ssize_t pbh; // probes per hop
 
 	char ip[INET_ADDRSTRLEN];
-	suseconds_t *rtt;
-
-	t_packet *packets;
-
-	t_protocols prot; // Every value beside those defined is invalid
+	suseconds_t rtt;
 } t_data;
 
 typedef struct s_packet
 {
-	uint16_t ttl;
-
-	union
-	{
-		struct icmphdr icmp;
-		struct tcphdr tcp;
-	};
-
-	char payload[];
+	struct icmp icmp;
+	char payload[PAYLOAD_SIZE];
 } t_packet;
-
-#ifndef NO_SUDO
-
-typedef struct s_packet_recv
-{
-	struct iphdr ip;
-	struct icmphdr icmp;
-	char payload[];
-} t_recv_packet;
-
-#endif
 
 extern t_data *g_data;
 
