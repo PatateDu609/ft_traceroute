@@ -18,12 +18,13 @@ static int32_t ft_socket_recv()
 
 void setup()
 {
+	if (g_data->proto == IPPROTO_UDP)
+		g_data->sock_send = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+
 	g_data->sock_recv = ft_socket_recv();
 
 	if (g_data->proto == IPPROTO_ICMP)
 		g_data->sock_send = g_data->sock_recv;
-	else
-		g_data->sock_send = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP); // Let the kernel choose the protocol
 
 	char *dst = inet_ntoa(((struct sockaddr_in *)g_data->dst_addr)->sin_addr);
 	ft_memcpy(g_data->dst, dst, ft_strlen(dst));

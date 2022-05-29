@@ -80,12 +80,15 @@ static void recv_probe()
 
 void __trace()
 {
+	int i = g_data->start;
+	if (setsockopt(g_data->sock_recv, SOL_IP, IP_TTL, &i, sizeof(i)) == -1)
+		warn("setsockopt failed");
 	for (int ttl = g_data->start; ttl <= g_data->max_hops && !g_data->done; ttl++)
 	{
 		dprintf(1, "%2ld", ttl - g_data->start + 1);
 		ft_memset(g_data->ip, 0, INET_ADDRSTRLEN);
 
-		if (setsockopt(g_data->sock_send, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1)
+		if (setsockopt(g_data->sock_send, SOL_IP, IP_TTL, &ttl, sizeof(ttl)) == -1)
 			throw_error("setsockopt failed"); // Critical error, should never happen
 
 		for (int j = 0; j < g_data->pbh; j++)
