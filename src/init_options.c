@@ -127,7 +127,7 @@ static void init_w(t_option *option)
 	option->description = "Set the time to wait between probes. (default is 3)";
 	option->need_value = 1;
 	option->check = ft_is_number;
-	option->arg_help = "Time in milliseconds";
+	option->arg_help = "Time in seconds";
 	option->small_print = "time";
 	option->value = NULL;
 	option->flag = OPT_w;

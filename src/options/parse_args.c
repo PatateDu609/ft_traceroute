@@ -80,7 +80,7 @@ static uint8_t extract_flags(int ac, char **av, t_args *args)
 		return 1;
 	for (int i = 1; i < ac; i++)
 	{
-		int8_t opt = get_option(args->options, args->nb_opt, av[i], i + 1 < ac ? av[i + 1] : NULL);
+		int64_t opt = get_option(args->options, args->nb_opt, av[i], i + 1 < ac ? av[i + 1] : NULL);
 		if (opt == -1)
 		{
 			print_help(args);

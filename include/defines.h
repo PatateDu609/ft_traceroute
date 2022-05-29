@@ -23,7 +23,6 @@
 #define PAYLOAD_SIZE 9
 #define MAX_PACKETS 3
 #define TIMEOUT_SEC 3
-#define TIMEOUT_USEC 0
 #define PROBES_BY_HOP 3
 
 #define PORT 33434

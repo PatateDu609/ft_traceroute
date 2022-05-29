@@ -43,8 +43,8 @@ static void recv_probe()
 	struct sockaddr_in addr;
 	socklen_t addrlen = sizeof(addr);
 
-	tv.tv_sec = g_data->timeout / 1000000;
-	tv.tv_usec = g_data->timeout % 1000000;
+	tv.tv_sec = g_data->timeout;
+	tv.tv_usec = 0;
 
 	fd_set readfds;
 	FD_ZERO(&readfds);
@@ -82,7 +82,7 @@ void __trace()
 {
 	for (int ttl = g_data->start; ttl <= g_data->max_hops && !g_data->done; ttl++)
 	{
-		dprintf(1, "%2d", ttl);
+		dprintf(1, "%2ld", ttl - g_data->start + 1);
 		ft_memset(g_data->ip, 0, INET_ADDRSTRLEN);
 
 		if (setsockopt(g_data->sock_send, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1)

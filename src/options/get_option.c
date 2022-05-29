@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int8_t manage_short_opt(t_option *opts, int nb_opts, char *arg, char *arg1)
+static int64_t manage_short_opt(t_option *opts, int nb_opts, char *arg, char *arg1)
 {
-	int8_t flags = 0;
+	int64_t flags = 0;
 
 	for (int i = 1; arg[i]; i++)
 	{
@@ -36,7 +36,7 @@ static int8_t manage_short_opt(t_option *opts, int nb_opts, char *arg, char *arg
 	return flags;
 }
 
-static int8_t manage_long_opt(t_option *opts, int nb_opts, char *arg)
+static int64_t manage_long_opt(t_option *opts, int nb_opts, char *arg)
 {
 	for (int i = 0; i < nb_opts; i++)
 		if (opts[i].name && ft_strcmp(opts[i].name, arg + 2) == 0)
@@ -44,7 +44,7 @@ static int8_t manage_long_opt(t_option *opts, int nb_opts, char *arg)
 	return -1;
 }
 
-int8_t get_option(t_option *options, int nb_opts, char *arg, char *arg1)
+int64_t get_option(t_option *options, int nb_opts, char *arg, char *arg1)
 {
 	if (arg[0] == '-' && arg[1] == '-')
 		return manage_long_opt(options, nb_opts, arg);

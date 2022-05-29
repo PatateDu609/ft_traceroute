@@ -59,7 +59,7 @@ static void setup_timeout()
 	if (value)
 		g_data->timeout = ft_atoi(value);
 	else
-		g_data->timeout = TIMEOUT_SEC * 1000000 + TIMEOUT_USEC;
+		g_data->timeout = TIMEOUT_SEC;
 }
 
 static void setup_start()
