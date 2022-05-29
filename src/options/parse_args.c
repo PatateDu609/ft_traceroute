@@ -1,4 +1,5 @@
 #include "ft_getopt.h"
+#include <stdio.h>
 
 int check_opt_value(char *arg, t_option *option, int nb_opt)
 {
@@ -90,6 +91,47 @@ static uint8_t extract_flags(int ac, char **av, t_args *args)
 	return 1;
 }
 
+static uint8_t check_options(t_args *args)
+{
+	int err = 0;
+	if (!args->options)
+		return 1;
+	for (int i = 0; i < args->nb_opt; i++)
+	{
+		t_option *option = args->options + i;
+		if (!option->short_name && !option->name)
+		{
+			dprintf(2, "An option (%d) needs a short name or a name\n", i);
+			err = 1;
+		}
+		if (option->need_value)
+		{
+			if (!option->arg_help)
+			{
+				dprintf(2, "An option (%d) needs an argument help\n", i);
+				err = 1;
+			}
+			if (!option->check)
+			{
+				dprintf(2, "An option (%d) need a checker function\n", i);
+				err = 1;
+			}
+			if (!option->small_print)
+			{
+				dprintf(2, "An option (%d) needs a small print\n", i);
+				err = 1;
+			}
+		}
+	}
+
+	if (err)
+	{
+		free(args->options);
+		free(args->args);
+	}
+	return err;
+}
+
 t_args *parse_args(int ac, char **av)
 {
 	t_args *args;
@@ -97,6 +139,8 @@ t_args *parse_args(int ac, char **av)
 	if (!(args = (t_args *)malloc(sizeof(t_args))))
 		return NULL;
 	args->options = init_options(&args->nb_opt);
+	if (check_options(args))
+		exit(1);
 	if (!extract_flags(ac, av, args))
 	{
 		free(args->options);

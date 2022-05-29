@@ -2,9 +2,14 @@
 #define DEFINES_H
 
 #define OPT_H 0x01
-#define OPT_N 0x02
+#define OPT_n 0x02
 #define OPT_I 0x04
-#define OPT_T 0x10
+#define OPT_q 0x08
+#define OPT_M 0x10
+#define OPT_m 0x20
+#define OPT_w 0x40
+#define OPT_p 0x80
+#define OPT_f 0x100
 
 #define __unused __attribute((unused))
 

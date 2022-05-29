@@ -12,7 +12,7 @@ typedef struct s_option
 	char short_name;
 	char *name;
 	char *description;
-	uint8_t flag;
+	uint64_t flag;
 
 	int need_value;
 	char *value;
