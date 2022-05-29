@@ -138,6 +138,7 @@ t_args *parse_args(int ac, char **av)
 
 	if (!(args = (t_args *)malloc(sizeof(t_args))))
 		return NULL;
+	ft_memset(args, 0, sizeof(t_args));
 	args->options = init_options(&args->nb_opt);
 	if (check_options(args))
 		exit(1);

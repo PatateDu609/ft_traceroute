@@ -3,6 +3,8 @@
 #include "utils.h"
 #include "ft_traceroute.h"
 
+void free_data(void) __attribute__((destructor));
+
 void print_help(t_args *args)
 {
 	printf("Usage: ./ft_traceroute [OPTION]... ADDRESS\n");
@@ -20,6 +22,16 @@ void print_help(t_args *args)
 		}
 		printf("\n\t%s\n", args->options[i].description);
 	}
+}
+
+void free_data(void)
+{
+	if (g_data)
+	{
+		free_args(g_data->args);
+		freeaddrinfo(g_data->infos);
+	}
+	free(g_data);
 }
 
 int main(int argc, char **argv)
@@ -41,11 +53,11 @@ int main(int argc, char **argv)
 	if (!name || arg_opt->args[1])
 	{
 		print_help(arg_opt);
+		free_args(arg_opt);
 		return 1;
 	}
 
 	trace(arg_opt);
-	free_args(arg_opt);
 
 	return 0;
 }
