@@ -19,6 +19,22 @@ static void send_probe(__unused t_packet *packet)
 	g_data->rtt = ft_get_time();
 }
 
+static void ft_get_print_addr(char *ip, struct sockaddr_in addr)
+{
+	if (g_data->args->flags & OPT_n)
+	{
+		dprintf(1, "  %s", ip);
+		return;
+	}
+
+	char name[NI_MAXHOST];
+	int ret = getnameinfo((struct sockaddr *)&addr, sizeof(addr), name, sizeof(name), NULL, 0, 0);
+	if (ret)
+		dprintf(1, "  %s", ip);
+	else
+		dprintf(1, "  %s (%s)", ip, name);
+}
+
 static void recv_probe()
 {
 	t_packet packet;
@@ -27,8 +43,8 @@ static void recv_probe()
 	struct sockaddr_in addr;
 	socklen_t addrlen = sizeof(addr);
 
-	tv.tv_sec = TIMEOUT_SEC;
-	tv.tv_usec = TIMEOUT_USEC;
+	tv.tv_sec = g_data->timeout / 1000000;
+	tv.tv_usec = g_data->timeout % 1000000;
 
 	fd_set readfds;
 	FD_ZERO(&readfds);
@@ -44,13 +60,15 @@ static void recv_probe()
 			warn("recvfrom failed");
 		else
 		{
+			float diff = ft_get_diff(g_data->rtt);
+
 			ft_strcpy(ip, inet_ntoa(addr.sin_addr));
 			if (ft_strcmp(ip, g_data->ip))
 			{
 				ft_memcpy(g_data->ip, ip, INET_ADDRSTRLEN);
-				dprintf(1, "  %s", ip);
+				ft_get_print_addr(ip, addr);
 			}
-			dprintf(1, "  %.3f ms", ft_get_diff(g_data->rtt));
+			dprintf(1, "  %.3f ms", diff);
 
 			if (!ft_strcmp(ip, g_data->dst))
 				g_data->done = 1;
@@ -62,7 +80,7 @@ static void recv_probe()
 
 void __trace()
 {
-	for (int ttl = FIRST_TTL; ttl < g_data->max_hops && !g_data->done; ttl++)
+	for (int ttl = g_data->start; ttl <= g_data->max_hops && !g_data->done; ttl++)
 	{
 		dprintf(1, "%2d", ttl);
 		ft_memset(g_data->ip, 0, INET_ADDRSTRLEN);
@@ -76,5 +94,8 @@ void __trace()
 			recv_probe();
 		}
 		dprintf(1, "\n");
+
+		struct sockaddr_in *addr = (struct sockaddr_in *)g_data->dst_addr;
+		addr->sin_port = ft_htons(ft_ntohs(addr->sin_port) + 1);
 	}
 }

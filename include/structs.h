@@ -31,6 +31,9 @@ typedef struct s_data
 
 	uint8_t max_hops;
 	ssize_t pbh; // probes per hop
+	ssize_t start;
+	suseconds_t timeout;
+	uint8_t proto;
 
 	char ip[INET_ADDRSTRLEN];
 	suseconds_t rtt;

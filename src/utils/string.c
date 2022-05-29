@@ -111,3 +111,27 @@ char *ft_strcpy(char *dst, char *src)
 	dst[i] = '\0';
 	return (dst);
 }
+
+int64_t ft_atoi(char *str)
+{
+	uint64_t i;
+	int sign;
+
+	i = 0;
+	sign = 1;
+	while (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\r' || *str == '\v' || *str == '\f')
+		str++;
+	if (*str == '-')
+	{
+		sign = -1;
+		str++;
+	}
+	else if (*str == '+')
+		str++;
+	while (*str >= '0' && *str <= '9')
+	{
+		i = i * 10 + *str - '0';
+		str++;
+	}
+	return (i * sign);
+}
